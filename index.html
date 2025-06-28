@@ -3,215 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Point Projection Formula</title>
+    <title>Formula Calculator</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f4f7f6;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-            margin-top: 30px;
-        }
-        h1 {
-            text-align: center;
-            border-bottom: none;
-            padding-bottom: 0;
-            margin-bottom: 20px;
-            color: #3498db;
-        }
-        h2 {
-            font-size: 1.8em;
-        }
-        h3 {
-            font-size: 1.4em;
-        }
-        .formula {
-            background-color: #ecf0f1;
-            border: 1px solid #bdc3c7;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            overflow-x: auto; /* For long formulas */
-        }
-        .formula pre {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
             margin: 0;
-            white-space: pre-wrap; /* Allows text to wrap */
-            word-wrap: break-word; /* Breaks long words */
         }
-        .variable-list {
-            list-style-type: none;
-            padding: 0;
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
         }
-        .variable-list li {
-            margin-bottom: 8px;
-            background-color: #e8f4f8;
-            padding: 10px;
-            border-left: 5px solid #3498db;
-            border-radius: 3px;
+        .formula-display {
+            background-color: #e9e9e9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
         }
-        .variable-list li strong {
-            color: #2c3e50;
+        .input-group {
+            margin-bottom: 15px;
         }
-        ul {
-            list-style-type: disc;
-            margin-left: 20px;
-        }
-        ul li {
+        .input-group label {
+            display: block;
             margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
         }
-        strong {
-            color: #e74c3c;
+        .input-group input[type="number"] {
+            width: calc(100% - 20px); /* Adjust for padding */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+            font-size: 1em;
         }
-        em {
-            color: #27ae60;
-            font-style: normal;
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            font-size: 1.2em;
+            text-align: center;
+            font-weight: bold;
+            color: #155724;
+            display: none; /* Hidden by default */
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="formula-display">
+            Your Formula: A + B * (C / D) - E
+        </div>
 
-    <h1>Player Point Projection Formula</h1>
-    <p>This document formalizes the logic for projecting a player's total points for an upcoming game. The core idea is to project various attempts and efficiencies, then combine them to estimate total points.</p>
+        <div class="input-group">
+            <label for="inputA">Input A:</label>
+            <input type="number" id="inputA" value="0">
+        </div>
+        <div class="input-group">
+            <label for="inputB">Input B:</label>
+            <input type="number" id="inputB" value="0">
+        </div>
+        <div class="input-group">
+            <label for="inputC">Input C:</label>
+            <input type="number" id="inputC" value="0">
+        </div>
+        <div class="input-group">
+            <label for="inputD">Input D:</label>
+            <input type="number" id="inputD" value="1">
+        </div>
+        <div class="input-group">
+            <label for="inputE">Input E:</label>
+            <input type="number" id="inputE" value="0">
+        </div>
 
-    <hr>
+        <button onclick="calculateFormula()">Calculate</button>
 
-    <h2>Core Idea</h2>
-    <p>Projected Points = (Projected FGA * Projected FG%) + (Projected 3PA * Projected 3P%) + (Projected FTA * Projected FT%)</p>
-    <p>This formula refines how we arrive at those projected attempts and efficiencies by considering various player, opponent, and game-specific factors.</p>
-
-    <hr>
-
-    <h2>Formula Variables & Definitions</h2>
-    <p>Let's use the following variables:</p>
-
-    <h3>Player Specific (Baseline/Historical - preferably from the most recent full season or a significant sample size like last 30 games):</h3>
-    <ul class="variable-list">
-        <li><strong>MPG<sub>player</sub></strong>: Player's average Minutes Per Game</li>
-        <li><strong>USG%<sub>player</sub></strong>: Player's Usage Rate</li>
-        <li><strong>FGA<sub>36</sub></strong>: Player's average Field Goal Attempts per 36 minutes</li>
-        <li><strong>FTA<sub>36</sub></strong>: Player's average Free Throw Attempts per 36 minutes</li>
-        <li><strong>FG%<sub>player</sub></strong>: Player's Field Goal Percentage (overall)</li>
-        <li><strong>2P%<sub>player</sub></strong>: Player's Two-Point Field Goal Percentage</li>
-        <li><strong>3P%<sub>player</sub></strong>: Player's Three-Point Percentage</li>
-        <li><strong>FT%<sub>player</sub></strong>: Player's Free Throw Percentage</li>
-        <li><strong>3PAr<sub>player</sub></strong>: Player's Three-Point Attempt Rate (3PA / FGA)</li>
-    </ul>
-
-    <h3>Opponent Specific (Defensive Metrics - ideally recent, e.g., last 10 games or season-to-date):</h3>
-    <ul class="variable-list">
-        <li><strong>DVP<sub>FGA_Pos</sub></strong>: Opponent's DVP (Defense vs. Position) metric for Field Goal Attempts Allowed to the player's primary position, relative to the league average (e.g., if league avg is 100%, and they allow 105%, this is 1.05).</li>
-        <li><strong>DVP<sub>FTA_Pos</sub></strong>: Opponent's DVP for Free Throw Attempts Allowed to the player's primary position, relative to the league average.</li>
-        <li><strong>PACE<sub>Opponent</sub></strong>: Opponent's estimated possessions per game (Pace).</li>
-        <li><strong>PACE<sub>LeagueAvg</sub></strong>: League average possessions per game.</li>
-    </ul>
-
-    <h3>Game Specific (Projection for the upcoming game):</h3>
-    <ul class="variable-list">
-        <li><strong>MP<sub>proj</sub></strong>: Player's Projected Minutes for the upcoming game. This is the most crucial manual input/estimation.</li>
-        <li><strong>USG%<sub>adj</sub></strong>: Any anticipated adjustment to the player's usage rate for this specific game (e.g., if a star teammate is out, this might be &gt;1; if the player is returning from injury, it might be &lt;1). Default = 1.0.</li>
-    </ul>
-
-    <hr>
-
-    <h2>Step-by-Step Formula Derivation</h2>
-
-    <h3>Step 1: Calculate Game Pace Adjustment</h3>
-    <p>The pace of the game dictates the total number of possessions, which in turn influences the number of offensive opportunities.</p>
-    <div class="formula">
-        <pre>PaceAdj = \frac{PACE_{Opponent}}{PACE_{LeagueAvg}}</pre>
+        <div id="result">
+            Calculated Result: <span id="resultValue"></span>
+        </div>
     </div>
-
-    <h3>Step 2: Project Field Goal Attempts (FGA)</h3>
-    <p>We'll start with the player's per-36 FGA, scale it to their projected minutes, adjust for their specific game usage, and then adjust for the opponent's DVP against attempts.</p>
-    <div class="formula">
-        <pre>FGA<sub>proj</sub> = FGA<sub>36</sub> \times \left( \frac{MP_{proj}}{36} \right) \times USG\%_{adj} \times DVP_{FGA\_Pos} \times PaceAdj</pre>
-    </div>
-
-    <h3>Step 3: Project Three-Point Attempts (3PA) and Two-Point Attempts (2PA)</h3>
-    <p>Using the player's typical 3-point attempt rate.</p>
-    <div class="formula">
-        <pre>3PA<sub>proj</sub> = FGA<sub>proj</sub> \times 3PAr<sub>player</sub></pre>
-        <pre>2PA<sub>proj</sub> = FGA<sub>proj</sub> - 3PA<sub>proj</sub></pre>
-    </div>
-
-    <h3>Step 4: Project Free Throw Attempts (FTA)</h3>
-    <p>Similar to FGA, we scale by minutes, adjust for usage, and DVP for free throws.</p>
-    <div class="formula">
-        <pre>FTA<sub>proj</sub> = FTA<sub>36</sub> \times \left( \frac{MP_{proj}}{36} \right) \times USG\%_{adj} \times DVP_{FTA\_Pos} \times PaceAdj</pre>
-    </div>
-
-    <h3>Step 5: Project Points from Field Goals</h3>
-    <p><em>Revised Step 5 (using 2P%<sub>player</sub>):</em></p>
-    <div class="formula">
-        <pre>Points<sub>FG</sub> = (2PA<sub>proj</sub> \times 2P\%<sub>player</sub> \times 2) + (3PA<sub>proj</sub> \times 3P\%<sub>player</sub> \times 3)</pre>
-    </div>
-
-    <h3>Step 6: Project Points from Free Throws</h3>
-    <div class="formula">
-        <pre>Points<sub>FT</sub> = FTA<sub>proj</sub> \times FT\%<sub>player</sub></pre>
-    </div>
-
-    <h3>Step 7: Total Projected Points</h3>
-    <div class="formula">
-        <pre>TotalPoints<sub>proj</sub> = Points<sub>FG</sub> + Points<sub>FT</sub></pre>
-    </div>
-
-    <hr>
-
-    <h2>Consolidated Formula</h2>
-    <p>Assuming you have a player's 2P%<sub>player</sub> readily available, here's the consolidated formula:</p>
-    <div class="formula">
-        <p><strong>1. Calculate Pace Adjustment:</strong></p>
-        <pre>PaceAdj = \frac{PACE_{Opponent}}{PACE_{LeagueAvg}}</pre>
-        <p><strong>2. Calculate Projected Field Goal Attempts:</strong></p>
-        <pre>FGA<sub>proj</sub> = FGA<sub>36</sub> \times \left( \frac{MP_{proj}}{36} \right) \times USG\%_{adj} \times DVP_{FGA\_Pos} \times PaceAdj</pre>
-        <p><strong>3. Calculate Projected Free Throw Attempts:</strong></p>
-        <pre>FTA<sub>proj</sub> = FTA<sub>36</sub> \times \left( \frac{MP_{proj}}{36} \right) \times USG\%_{adj} \times DVP_{FTA\_Pos} \times PaceAdj</pre>
-        <p><strong>4. Calculate Total Projected Points:</strong></p>
-        <pre>TotalPoints<sub>proj</sub> = \left[ (FGA_{proj} \times (1 - 3PAr_{player})) \times 2P\%_{player} \times 2 \right] + \left[ (FGA_{proj} \times 3PAr_{player}) \times 3P\%_{player} \times 3 \right] + \left[ FTA_{proj} \times FT\%_{player} \right]</pre>
-    </div>
-
-    <hr>
-
-    <h2>How to Use and Refine</h2>
-    <ul>
-        <li><strong>Data Collection:</strong> The biggest hurdle will be consistently finding <strong>DVP<sub>FGA_Pos</sub></strong> and <strong>DVP<sub>FTA_Pos</sub></strong> data. Many DVP resources focus on total fantasy points or raw points allowed, rather than specific attempts allowed. You might need to derive these yourself by looking at opponent stats for each position (e.g., how many FGA opposing Point Guards average against Team X versus the league average for PGs).</li>
-        <li><strong>MP<sub>proj</sub> (Projected Minutes):</strong> This is the most subjective input. Start with the player's season average, but heavily adjust for:
-            <ul>
-                <li>Recent game minutes (last 3-5 games).</li>
-                <li>Injury status of the player or teammates.</li>
-                <li>Coach's rotations.</li>
-                <li>Blowout potential (check spread and over/under).</li>
-            </ul>
-        </li>
-        <li><strong>USG%<sub>adj</sub>:</strong> Default to 1.0. Only change if there's a strong reason (e.g., key offensive player is injured, increasing your player's expected usage).</li>
-        <li><strong>Recent Player Averages:</strong> Instead of season-long FG%<sub>player</sub>, 3P%<sub>player</sub>, FT%<sub>player</sub>, and 3PAr<sub>player</sub>, consider using a rolling average (e.g., last 10-15 games) if the player's form has significantly changed.</li>
-        <li><strong>Round to Nearest Whole Number:</strong> Once you get your TotalPoints<sub>proj</sub>, round it to the nearest whole number for comparison to prop lines.</li>
-        <li><strong>Start Simple, Then Add Complexity:</strong> This formula is a good starting point. As you get comfortable, you could add factors for:
-            <ul>
-                <li>Individual defender match-ups.</li>
-                <li>Home/Away splits.</li>
-                <li>Rest advantage/disadvantage.</li>
-            </ul>
-        </li>
-    </ul>
-
-    <p>This formula provides a robust framework for your projection model, incorporating the key elements you identified!</p>
 
     <script>
-        // Optional: You could add JavaScript here to make the formulas interactive
-        // e.g., allowing users to input values and see the calculated projection.
-        // For now, it's a static display.
+        function calculateFormula() {
+            // Get values from input fields
+            const A = parseFloat(document.getElementById('inputA').value);
+            const B = parseFloat(document.getElementById('inputB').value);
+            const C = parseFloat(document.getElementById('inputC').value);
+            const D = parseFloat(document.getElementById('inputD').value);
+            const E = parseFloat(document.getElementById('inputE').value);
+
+            // --- IMPORTANT: Replace this with your actual formula ---
+            // Example: result = A + (B * (C / D)) - E;
+            let calculatedResult;
+            if (D === 0) {
+                calculatedResult = "Cannot divide by zero!";
+            } else {
+                calculatedResult = A + (B * (C / D)) - E; // THIS IS YOUR FORMULA
+            }
+            // --------------------------------------------------------
+
+            // Display the result
+            const resultElement = document.getElementById('result');
+            const resultValueElement = document.getElementById('resultValue');
+
+            if (typeof calculatedResult === 'string') {
+                resultValueElement.textContent = calculatedResult;
+                resultElement.style.backgroundColor = '#f8d7da'; /* Light red for errors */
+                resultElement.style.borderColor = '#f5c6cb';
+                resultElement.style.color = '#721c24';
+            } else {
+                resultValueElement.textContent = calculatedResult.toFixed(2); // Display with 2 decimal places
+                resultElement.style.backgroundColor = '#d4edda'; /* Green for success */
+                resultElement.style.borderColor = '#c3e6cb';
+                resultElement.style.color = '#155724';
+            }
+            resultElement.style.display = 'block'; // Make the result box visible
+        }
     </script>
 </body>
 </html>
