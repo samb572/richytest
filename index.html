@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formula Calculator</title>
+    <title>Player Projected Points Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,6 +13,8 @@
             min-height: 100vh;
             background-color: #f4f4f4;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box; /* Ensures padding doesn't cause overflow */
         }
         .container {
             background-color: #fff;
@@ -20,7 +22,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 90%;
-            max-width: 500px;
+            max-width: 700px; /* Increased max-width for more inputs */
         }
         .formula-display {
             background-color: #e9e9e9;
@@ -28,13 +30,30 @@
             padding: 15px;
             margin-bottom: 25px;
             border-radius: 5px;
-            text-align: center;
-            font-size: 1.1em;
-            font-weight: bold;
+            text-align: left; /* Changed to left for multi-line formula */
+            font-size: 0.9em; /* Slightly smaller for readability */
             color: #333;
+            overflow-x: auto; /* Allows horizontal scrolling for long formulas */
+            white-space: pre-wrap; /* Preserves white space and wraps text */
+        }
+        .formula-display strong {
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px 20px; /* Row gap, Column gap */
+        }
+        @media (min-width: 600px) {
+            .input-grid {
+                grid-template-columns: 1fr 1fr; /* Two columns on wider screens */
+            }
         }
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 0; /* Reset margin as gap handles spacing */
         }
         .input-group label {
             display: block;
@@ -43,11 +62,11 @@
             color: #555;
         }
         .input-group input[type="number"] {
-            width: calc(100% - 20px); /* Adjust for padding */
+            width: calc(100% - 22px); /* Adjust for padding and border */
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+            box-sizing: border-box;
             font-size: 1em;
         }
         button {
@@ -59,7 +78,7 @@
             cursor: pointer;
             font-size: 1em;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 25px;
         }
         button:hover {
             background-color: #0056b3;
@@ -81,70 +100,174 @@
 <body>
     <div class="container">
         <div class="formula-display">
-            Your Formula: A + B * (C / D) - E
+            <strong>Projected Points Formula Logic:</strong>
+            <pre>
+PaceAdj = PACE_Opponent / PACE_LeagueAvg
+
+FGA_proj = FGA_36 * (MP_proj / 36) * USG%_adj * DVP_FGA_Pos * PaceAdj
+
+FTA_proj = FTA_36 * (MP_proj / 36) * USG%_adj * DVP_FTA_Pos * PaceAdj
+
+TotalPoints_proj = [ (FGA_proj * (1 - 3PAr_player)) * 2P%_player * 2 ]
+                 + [ (FGA_proj * 3PAr_player) * 3P%_player * 3 ]
+                 + [ FTA_proj * FT%_player ]
+            </pre>
+            <small>Note: Percentages should be entered as decimals (e.g., 0.50 for 50%). DVP values should be relative to league average (e.g., 1.05 for 105%).</small>
         </div>
 
-        <div class="input-group">
-            <label for="inputA">Input A:</label>
-            <input type="number" id="inputA" value="0">
-        </div>
-        <div class="input-group">
-            <label for="inputB">Input B:</label>
-            <input type="number" id="inputB" value="0">
-        </div>
-        <div class="input-group">
-            <label for="inputC">Input C:</label>
-            <input type="number" id="inputC" value="0">
-        </div>
-        <div class="input-group">
-            <label for="inputD">Input D:</label>
-            <input type="number" id="inputD" value="1">
-        </div>
-        <div class="input-group">
-            <label for="inputE">Input E:</label>
-            <input type="number" id="inputE" value="0">
+        <div class="input-grid">
+            <div class="input-group">
+                <label for="mpPerGame">MPG_player (Avg Min Per Game):</label>
+                <input type="number" id="mpPerGame" value="30" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="usageRate">USG%_player (Usage Rate as decimal):</label>
+                <input type="number" id="usageRate" value="0.25" step="0.01">
+            </div>
+            <div class="input-group">
+                <label for="fgaPer36">FGA_36 (FGA per 36 min):</label>
+                <input type="number" id="fgaPer36" value="15" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="ftaPer36">FTA_36 (FTA per 36 min):</label>
+                <input type="number" id="ftaPer36" value="5" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="fgPct">FG%_player (Field Goal % as decimal):</label>
+                <input type="number" id="fgPct" value="0.45" step="0.001">
+            </div>
+            <div class="input-group">
+                <label for="twoPPct">2P%_player (Two-Point % as decimal):</label>
+                <input type="number" id="twoPPct" value="0.50" step="0.001">
+            </div>
+            <div class="input-group">
+                <label for="threePPct">3P%_player (Three-Point % as decimal):</label>
+                <input type="number" id="threePPct" value="0.35" step="0.001">
+            </div>
+            <div class="input-group">
+                <label for="ftPct">FT%_player (Free Throw % as decimal):</label>
+                <input type="number" id="ftPct" value="0.80" step="0.001">
+            </div>
+            <div class="input-group">
+                <label for="threePAr">3PAr_player (Three-Point Attempt Rate as decimal):</label>
+                <input type="number" id="threePAr" value="0.30" step="0.01">
+            </div>
+
+            <div class="input-group">
+                <label for="dvpFgaPos">DVP_FGA_Pos (Opponent FGA DVP relative to league avg):</label>
+                <input type="number" id="dvpFgaPos" value="1.00" step="0.01">
+            </div>
+            <div class="input-group">
+                <label for="dvpFtpPos">DVP_FTA_Pos (Opponent FTA DVP relative to league avg):</label>
+                <input type="number" id="dvpFtpPos" value="1.00" step="0.01">
+            </div>
+            <div class="input-group">
+                <label for="paceOpponent">PACE_Opponent (Opponent Possessions Per Game):</label>
+                <input type="number" id="paceOpponent" value="100.0" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="paceLeagueAvg">PACE_LeagueAvg (League Avg Possessions Per Game):</label>
+                <input type="number" id="paceLeagueAvg" value="100.0" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label for="projMinutes">MP_proj (Projected Minutes for Game):</label>
+                <input type="number" id="projMinutes" value="32" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="usageAdj">USG%_adj (Usage Adjustment for Game - default 1.0):</label>
+                <input type="number" id="usageAdj" value="1.0" step="0.01">
+            </div>
         </div>
 
-        <button onclick="calculateFormula()">Calculate</button>
+        <button onclick="calculateProjectedPoints()">Calculate Projected Points</button>
 
         <div id="result">
-            Calculated Result: <span id="resultValue"></span>
+            Projected Points: <span id="resultValue"></span>
         </div>
     </div>
 
     <script>
-        function calculateFormula() {
-            // Get values from input fields
-            const A = parseFloat(document.getElementById('inputA').value);
-            const B = parseFloat(document.getElementById('inputB').value);
-            const C = parseFloat(document.getElementById('inputC').value);
-            const D = parseFloat(document.getElementById('inputD').value);
-            const E = parseFloat(document.getElementById('inputE').value);
+        function calculateProjectedPoints() {
+            // Player Specific Inputs
+            const MPG_player = parseFloat(document.getElementById('mpPerGame').value);
+            const USG_player = parseFloat(document.getElementById('usageRate').value); // Not directly used in final formula, but good to have.
+            const FGA_36 = parseFloat(document.getElementById('fgaPer36').value);
+            const FTA_36 = parseFloat(document.getElementById('ftaPer36').value);
+            const FG_player = parseFloat(document.getElementById('fgPct').value); // Not directly used in final formula, but good to have.
+            const twoP_player = parseFloat(document.getElementById('twoPPct').value);
+            const threeP_player = parseFloat(document.getElementById('threePPct').value);
+            const FT_player = parseFloat(document.getElementById('ftPct').value);
+            const threePAr_player = parseFloat(document.getElementById('threePAr').value);
 
-            // --- IMPORTANT: Replace this with your actual formula ---
-            // Example: result = A + (B * (C / D)) - E;
+            // Opponent Specific Inputs
+            const DVP_FGA_Pos = parseFloat(document.getElementById('dvpFgaPos').value);
+            const DVP_FTA_Pos = parseFloat(document.getElementById('dvpFtpPos').value);
+            const PACE_Opponent = parseFloat(document.getElementById('paceOpponent').value);
+            const PACE_LeagueAvg = parseFloat(document.getElementById('paceLeagueAvg').value);
+
+            // Game Specific Inputs
+            const MP_proj = parseFloat(document.getElementById('projMinutes').value);
+            const USG_adj = parseFloat(document.getElementById('usageAdj').value);
+
+            // --- Formula Calculation ---
             let calculatedResult;
-            if (D === 0) {
-                calculatedResult = "Cannot divide by zero!";
-            } else {
-                calculatedResult = A + (B * (C / D)) - E; // THIS IS YOUR FORMULA
-            }
-            // --------------------------------------------------------
-
-            // Display the result
             const resultElement = document.getElementById('result');
             const resultValueElement = document.getElementById('resultValue');
 
-            if (typeof calculatedResult === 'string') {
+            // Input Validation
+            if (PACE_LeagueAvg === 0) {
+                calculatedResult = "Error: League Average Pace cannot be zero!";
                 resultValueElement.textContent = calculatedResult;
-                resultElement.style.backgroundColor = '#f8d7da'; /* Light red for errors */
+                resultElement.style.backgroundColor = '#f8d7da';
                 resultElement.style.borderColor = '#f5c6cb';
                 resultElement.style.color = '#721c24';
-            } else {
-                resultValueElement.textContent = calculatedResult.toFixed(2); // Display with 2 decimal places
-                resultElement.style.backgroundColor = '#d4edda'; /* Green for success */
+                resultElement.style.display = 'block';
+                return; // Stop execution if there's an error
+            }
+            if (MP_proj === 0) {
+                 calculatedResult = "Error: Projected Minutes cannot be zero!";
+                resultValueElement.textContent = calculatedResult;
+                resultElement.style.backgroundColor = '#f8d7da';
+                resultElement.style.borderColor = '#f5c6cb';
+                resultElement.style.color = '#721c24';
+                resultElement.style.display = 'block';
+                return;
+            }
+
+
+            try {
+                // Step 1: Calculate Game Pace Adjustment
+                const PaceAdj = PACE_Opponent / PACE_LeagueAvg;
+
+                // Step 2: Project Field Goal Attempts (FGA)
+                const FGA_proj = FGA_36 * (MP_proj / 36) * USG_adj * DVP_FGA_Pos * PaceAdj;
+
+                // Step 3: Project Free Throw Attempts (FTA)
+                const FTA_proj = FTA_36 * (MP_proj / 36) * USG_adj * DVP_FTA_Pos * PaceAdj;
+
+                // Step 4: Calculate Total Projected Points
+                const pointsFromTwoPointers = (FGA_proj * (1 - threePAr_player)) * twoP_player * 2;
+                const pointsFromThreePointers = (FGA_proj * threePAr_player) * threeP_player * 3;
+                const pointsFromFreeThrows = FTA_proj * FT_player;
+
+                calculatedResult = pointsFromTwoPointers + pointsFromThreePointers + pointsFromFreeThrows;
+
+                // Round to nearest whole number as per your instruction
+                calculatedResult = Math.round(calculatedResult);
+
+                // Display the result
+                resultValueElement.textContent = calculatedResult;
+                resultElement.style.backgroundColor = '#d4edda';
                 resultElement.style.borderColor = '#c3e6cb';
                 resultElement.style.color = '#155724';
+
+            } catch (error) {
+                calculatedResult = "Calculation Error: " + error.message;
+                resultValueElement.textContent = calculatedResult;
+                resultElement.style.backgroundColor = '#f8d7da';
+                resultElement.style.borderColor = '#f5c6cb';
+                resultElement.style.color = '#721c24';
             }
             resultElement.style.display = 'block'; // Make the result box visible
         }
